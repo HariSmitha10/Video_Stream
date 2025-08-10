@@ -1,29 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Live Video Stream</title>
-    <script src="config.js"></script>
-    <style>
-        body {
-            background-color: #000;
-            color: #fff;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-            border: 2px solid #fff;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Raspberry Pi Camera Live Stream</title>
+<script src="config.js"></script>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1f1c2c, #928dab);
+        color: #f0f0f0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+    }
+    h1 {
+        margin-top: 2rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+    #videoStream {
+        max-width: 90vw;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        transition: transform 0.3s ease;
+        margin-top: 1rem;
+    }
+    #videoStream:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.8);
+    }
+    button {
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        border-radius: 6px;
+        background-color: #4a4e69;
+        border: none;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #22223b;
+    }
+    #status {
+        margin-top: 1rem;
+        font-size: 1.1rem;
+    }
+    code {
+        background: #22223b;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        user-select: all; /* easier copy */
+    }
+    .footer {
+        margin-top: auto;
+        padding: 1rem;
+        font-size: 0.9rem;
+        opacity: 0.7;
+    }
+</style>
 </head>
 <body>
-    <h1>Raspberry Pi Live Camera Stream</h1>
-    <img id="videoStream" src="" alt="Loading stream...">
+    <h1>Raspberry Pi Camera Live Stream</h1>
+
+    <img id="videoStream" src="" alt="Loading stream..." />
+
+    <button id="refreshBtn">Refresh Stream</button>
+
+    <p id="status">Stream Status: <span>Loading...</span></p>
+
+    <p>
+        Stream URL: <code id="streamUrl"></code>
+        <button id="copyBtn">Copy URL</button>
+    </p>
+
+    <div class="footer">
+        &copy; 2025 Raspberry Pi Stream UI
+    </div>
+
     <script>
-        // Set the image src dynamically from config.js
-        document.getElementById("videoStream").src = STREAM_URL;
+        const refreshBtn = document.getElementById('refreshBtn');
+        const videoStream = document.getElementById('videoStream');
+        const statusText = document.querySelector('#status span');
+        const streamUrlElem = document.getElementById('streamUrl');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // Use stream URL from config.js
+        streamUrlElem.textContent = STREAM_URL;
+        videoStream.src = STREAM_URL;
+
+        refreshBtn.addEventListener('click', () => {
+            statusText.textContent = 'Reloading...';
+            videoStream.src = STREAM_URL + '&t=' + new Date().getTime();
+            statusText.textContent = 'Live';
+        });
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(STREAM_URL).then(() => {
+                alert('Stream URL copied to clipboard!');
+            });
+        });
+
+        videoStream.onload = () => {
+            statusText.textContent = 'Live';
+        };
     </script>
 </body>
 </html>
