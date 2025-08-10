@@ -1,10 +1,15 @@
 import http.server
 import socketserver
 
-PORT = 8000
+PORT = 8090
 
-Handler = http.server.SimpleHTTPRequestHandler
+class MyHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
 
-with socketserver.TCPServer(("", PORT), Handler) as httpd:
+if __name__ == "__main__":
     print(f"Serving UI at http://localhost:{PORT}")
-    httpd.serve_forever()
+    socketserver.TCPServer(("", PORT), MyHandler).serve_forever()
