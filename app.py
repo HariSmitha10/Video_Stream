@@ -15,9 +15,9 @@ telemetry_data = {
 # ====== MAVLink listener thread ======
 def mavlink_listener():
     # Change connection string if your setup is different
-    mav = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
+    mav = mavutil.mavlink_connection('udpin:192.168.2.2:14550')
     mav.wait_heartbeat()
-    print("✅ MAVLink heartbeat received from system (sysid %u compid %u)" % (mav.target_system, mav.target_component))
+    print("MAVLink heartbeat received from system (sysid %u compid %u)" % (mav.target_system, mav.target_component))
 
     while True:
         msg = mav.recv_match(blocking=True, timeout=1)
