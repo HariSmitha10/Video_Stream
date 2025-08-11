@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Raspberry Pi Camera Live Stream</title>
+<title>AUV Live Video & Telemetry</title>
 <script src="config.js"></script>
 <style>
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #1f1c2c, #928dab);
+        background: linear-gradient(135deg,#232526,#485563);
         color: #f0f0f0;
         margin: 0;
         display: flex;
@@ -20,94 +20,84 @@
         margin-top: 2rem;
         font-weight: 600;
         letter-spacing: 1px;
+        color: #7ed6df;
     }
     #videoStream {
         max-width: 90vw;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-        transition: transform 0.3s ease;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(44,62,80,0.7);
+        transition: transform .3s;
         margin-top: 1rem;
     }
-    #videoStream:hover {
-        transform: scale(1.05);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.8);
+    #videoStream:hover { transform: scale(1.02); }
+    #telemetry {
+        position: absolute;
+        top: 24px;
+        left: 28px;
+        background: rgba(30,30,30,0.76);
+        padding: 12px 18px;
+        border-radius: 9px;
+        font-size:1.05rem;
+        z-index:10;
+        box-shadow:0 2px 6px rgba(0,0,0,0.2);
     }
+    .data-label { color: #ffe966; }
     button {
         margin-top: 1rem;
-        padding: 0.5rem 1rem;
         font-size: 1rem;
-        border-radius: 6px;
-        background-color: #4a4e69;
+        background: #0097e6;
         border: none;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
+        border-radius: 8px;
+        color: #fff;
+        padding: .5rem 1rem;
+        cursor:pointer;
+        transition:.2s background;
     }
-    button:hover {
-        background-color: #22223b;
-    }
-    #status {
-        margin-top: 1rem;
-        font-size: 1.1rem;
-    }
-    code {
-        background: #22223b;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        user-select: all; /* easier copy */
-    }
+    button:hover { background: #e1b12c;}
     .footer {
         margin-top: auto;
         padding: 1rem;
-        font-size: 0.9rem;
+        font-size: 0.98rem;
         opacity: 0.7;
+        color: #c0c0c0;
     }
 </style>
 </head>
 <body>
-    <h1>Raspberry Pi Camera Live Stream</h1>
-
-    <img id="videoStream" src="" alt="Loading stream..." />
-
-    <button id="refreshBtn">Refresh Stream</button>
-
-    <p id="status">Stream Status: <span>Loading...</span></p>
-
-    <p>
-        Stream URL: <code id="streamUrl"></code>
-        <button id="copyBtn">Copy URL</button>
-    </p>
-
-    <div class="footer">
-        &copy; 2025 Raspberry Pi Stream UI
+    <h1>AUV Camera & Telemetry Stream</h1>
+    <div id="telemetry">
+        <div><span class="data-label">Depth:</span> <span id="depth">--</span> Pa</div>
+        <div><span class="data-label">Velocity:</span> <span id="velocity">--</span> m/s</div>
+        <div><span class="data-label">Heading:</span> <span id="heading">--</span> °</div>
     </div>
+    <img id="videoStream" src="" alt="Loading stream..." />
+    <button id="refreshBtn">Refresh Video</button>
+    <div class="footer">&copy; 2025 AUV UI | Live Camera & Telemetry</div>
+<script>
+    document.getElementById("videoStream").src = STREAM_URL;
 
-    <script>
-        const refreshBtn = document.getElementById('refreshBtn');
-        const videoStream = document.getElementById('videoStream');
-        const statusText = document.querySelector('#status span');
-        const streamUrlElem = document.getElementById('streamUrl');
-        const copyBtn = document.getElementById('copyBtn');
+    // Telemetry fetching
+    async function fetchTelemetry() {
+        try {
+            const response = await fetch('http://' + window.location.hostname + ':5000/telemetry');
+            const data = await response.json();
+            document.getElementById('depth').textContent = parseFloat(data.depth).toFixed(2);
+            document.getElementById('velocity').textContent = parseFloat(data.velocity).toFixed(2);
+            document.getElementById('heading').textContent = parseFloat(data.heading).toFixed(1);
+        } catch (e) {
+            document.getElementById('depth').textContent = '--';
+            document.getElementById('velocity').textContent = '--';
+            document.getElementById('heading').textContent = '--';
+        }
+    }
+    setInterval(fetchTelemetry, 1000);
+    window.onload = fetchTelemetry;
 
-        // Use stream URL from config.js
-        streamUrlElem.textContent = STREAM_URL;
-        videoStream.src = STREAM_URL;
-
-        refreshBtn.addEventListener('click', () => {
-            statusText.textContent = 'Reloading...';
-            videoStream.src = STREAM_URL + '&t=' + new Date().getTime();
-            statusText.textContent = 'Live';
-        });
-
-        copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(STREAM_URL).then(() => {
-                alert('Stream URL copied to clipboard!');
-            });
-        });
-
-        videoStream.onload = () => {
-            statusText.textContent = 'Live';
-        };
-    </script>
+    // Refresh button handler
+    document.getElementById("refreshBtn").onclick = function() {
+        let img = document.getElementById("videoStream");
+        img.src = STREAM_URL + "&reload=" + new Date().getTime();
+    };
+</script>
 </body>
 </html>
