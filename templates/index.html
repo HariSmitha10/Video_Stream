@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AUV Live Video & Telemetry</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="{{ url_for('static', filename='config.js') }}"></script>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #121212;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+    header {
+        padding: 10px;
+        background: #1f1f1f;
+        font-size: 1.4rem;
+        text-align: center;
+    }
+    main {
+        display: flex;
+        flex: 1;
+    }
+    #video {
+        flex: 3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    #video img {
+        max-width: 100%;
+        border-radius: 8px;
+    }
+    #telemetry {
+        flex: 1;
+        background: #1e1e1e;
+        padding: 20px;
+    }
+    .telemetry-item {
+        margin: 10px 0;
+        font-size: 1.2rem;
+    }
+    .label {
+        color: #7ed6df;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+<header>AUV Live Video & Telemetry</header>
+<main>
+    <!-- Video Section -->
+    <div id="video">
+        <img id="videoStream" src="" alt="Loading video...">
+    </div>
+    <!-- Telemetry Section -->
+    <div id="telemetry">
+        <div class="telemetry-item">
+            <span class="label">Depth:</span> <span id="depth">--</span> m
+        </div>
+        <div class="telemetry-item">
+            <span class="label">Velocity:</span> <span id="velocity">--</span> m/s
+        </div>
+        <div class="telemetry-item">
+            <span class="label">Heading:</span> <span id="heading">--</span> °
+        </div>
+    </div>
+</main>
+
+<script>
+document.getElementById('videoStream').src = STREAM_URL;
+
+async function fetchTelemetry() {
+    try {
+        const resp = await fetch('/telemetry'); // same host:port
+        const data = await resp.json();
+        document.getElementById('depth').textContent = parseFloat(data.depth).toFixed(2);
+        document.getElementById('velocity').textContent = parseFloat(data.velocity).toFixed(2);
+        document.getElementById('heading').textContent = parseFloat(data.heading).toFixed(0);
+    } catch (e) {
+        console.error('Telemetry fetch error', e);
+    }
+}
+
+setInterval(fetchTelemetry, 1000);
+window.onload = fetchTelemetry;
+</script>
+</body>
+</html>
