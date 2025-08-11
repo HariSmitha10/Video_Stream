@@ -7,97 +7,109 @@
 <script src="config.js"></script>
 <style>
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg,#232526,#485563);
+        font-family: 'Segoe UI', sans-serif;
+        background: #121212;
         color: #f0f0f0;
         margin: 0;
+        height: 100vh;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        min-height: 100vh;
     }
-    h1 {
-        margin-top: 2rem;
-        font-weight: 600;
+    header {
+        padding: 10px;
+        background: #1f1f1f;
+        text-align: center;
+        font-size: 1.4rem;
+        font-weight: bold;
         letter-spacing: 1px;
-        color: #7ed6df;
+    }
+    main {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+        overflow: hidden;
+    }
+    /* Video section */
+    #video-container {
+        flex: 3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
     }
     #videoStream {
-        max-width: 90vw;
-        border-radius: 14px;
-        box-shadow: 0 8px 24px rgba(44,62,80,0.7);
-        transition: transform .3s;
-        margin-top: 1rem;
-    }
-    #videoStream:hover { transform: scale(1.02); }
-    #telemetry {
-        position: absolute;
-        top: 24px;
-        left: 28px;
-        background: rgba(30,30,30,0.76);
-        padding: 12px 18px;
-        border-radius: 9px;
-        font-size:1.05rem;
-        z-index:10;
-        box-shadow:0 2px 6px rgba(0,0,0,0.2);
-    }
-    .data-label { color: #ffe966; }
-    button {
-        margin-top: 1rem;
-        font-size: 1rem;
-        background: #0097e6;
-        border: none;
+        max-width: 100%;
+        max-height: 100%;
         border-radius: 8px;
-        color: #fff;
-        padding: .5rem 1rem;
-        cursor:pointer;
-        transition:.2s background;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
-    button:hover { background: #e1b12c;}
-    .footer {
-        margin-top: auto;
-        padding: 1rem;
-        font-size: 0.98rem;
-        opacity: 0.7;
-        color: #c0c0c0;
+    /* Telemetry section */
+    #telemetry-container {
+        flex: 1;
+        background: #1e1e1e;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        box-shadow: -2px 0 6px rgba(0, 0, 0, 0.4);
+    }
+    .telemetry-title {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+        color: #ffb100;
+    }
+    .telemetry-item {
+        font-size: 1rem;
+        margin: 8px 0;
+        padding: 6px;
+        background: #2c2c2c;
+        border-radius: 5px;
+    }
+    .label {
+        color: #7ed6df;
+        font-weight: bold;
     }
 </style>
 </head>
 <body>
-    <h1>AUV Camera & Telemetry Stream</h1>
-    <div id="telemetry">
-        <div><span class="data-label">Depth:</span> <span id="depth">--</span> Pa</div>
-        <div><span class="data-label">Velocity:</span> <span id="velocity">--</span> m/s</div>
-        <div><span class="data-label">Heading:</span> <span id="heading">--</span> °</div>
-    </div>
-    <img id="videoStream" src="" alt="Loading stream..." />
-    <button id="refreshBtn">Refresh Video</button>
-    <div class="footer">&copy; 2025 AUV UI | Live Camera & Telemetry</div>
-<script>
-    document.getElementById("videoStream").src = STREAM_URL;
+    <header>AUV Live Video & Telemetry</header>
+    <main>
+        <!-- Video area -->
+        <div id="video-container">
+            <img id="videoStream" src="" alt="Loading video stream..." />
+        </div>
+        <!-- Telemetry area -->
+        <div id="telemetry-container">
+            <div class="telemetry-title">Telemetry Data</div>
+            <div class="telemetry-item"><span class="label">Depth:</span> <span id="depth">--</span> m</div>
+            <div class="telemetry-item"><span class="label">Velocity:</span> <span id="velocity">--</span> m/s</div>
+            <div class="telemetry-item"><span class="label">Heading:</span> <span id="heading">--</span> °</div>
+        </div>
+    </main>
 
-    // Telemetry fetching
+<script>
+    // Load MJPEG stream URL from config.js
+    document.getElementById('videoStream').src = STREAM_URL;
+
     async function fetchTelemetry() {
         try {
-            const response = await fetch('http://' + window.location.hostname + ':5000/telemetry');
-            const data = await response.json();
+            // Assuming telemetry_api.py is running on the Pi at port 5000
+            const resp = await fetch('http://' + window.location.hostname + ':5000/telemetry');
+            const data = await resp.json();
             document.getElementById('depth').textContent = parseFloat(data.depth).toFixed(2);
             document.getElementById('velocity').textContent = parseFloat(data.velocity).toFixed(2);
             document.getElementById('heading').textContent = parseFloat(data.heading).toFixed(1);
-        } catch (e) {
+        } catch (err) {
+            console.error('Telemetry fetch error', err);
             document.getElementById('depth').textContent = '--';
             document.getElementById('velocity').textContent = '--';
             document.getElementById('heading').textContent = '--';
         }
     }
+
+    // Refresh telemetry every second
     setInterval(fetchTelemetry, 1000);
     window.onload = fetchTelemetry;
-
-    // Refresh button handler
-    document.getElementById("refreshBtn").onclick = function() {
-        let img = document.getElementById("videoStream");
-        img.src = STREAM_URL + "&reload=" + new Date().getTime();
-    };
 </script>
 </body>
 </html>

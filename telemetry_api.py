@@ -14,7 +14,7 @@ telemetry_data = {
 
 def mavlink_listener():
     # Connect to Pixhawk via UDP (adjust port/interface as needed)
-    mav = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
+    mav = mavutil.mavlink_connection('udpin:192.168.2.2:14551')
     mav.wait_heartbeat()
     print("MAVLink: Heartbeat received.")
 
