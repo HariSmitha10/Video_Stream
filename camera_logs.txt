@@ -1,0 +1,2 @@
+2025-08-14 18:39:40.965192 - Arm state changed to ARMED
+2025-08-14 18:39:50.631045 - Arm state changed to DISARMED
