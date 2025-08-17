@@ -1,0 +1,5 @@
+[2025-08-14 19:09:46] Attempting to connect to MAVLink on udpin:192.168.2.1:14550...
+[2025-08-14 19:09:46] MAVLink Heartbeat OK! (SysID: 1)
+[2025-08-14 19:10:16] Snapshot failed. Ensure ffmpeg is installed. Error: [Errno 2] No such file or directory: 'ffmpeg'
+[2025-08-14 19:11:45] Snapshot failed. Ensure ffmpeg is installed. Error: [Errno 2] No such file or directory: 'ffmpeg'
+[2025-08-14 19:12:13] Snapshot failed. Ensure ffmpeg is installed. Error: [Errno 2] No such file or directory: 'ffmpeg'

@@ -1,168 +1,127 @@
+<!-- /templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>AUV Live Video & Telemetry</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="{{ url_for('static', filename='config.js') }}"></script>
-<style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #121212;
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-    }
-    header {
-        padding: 10px;
-        background: #1f1f1f;
-        font-size: 1.4rem;
-        text-align: center;
-    }
-    main {
-        display: flex;
-        flex: 1;
-    }
-    #video-section {
-        flex: 3;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 10px;
-    }
-    #video-container {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-    #video-container img {
-        max-width: 100%;
-        max-height: 70vh;
-        border-radius: 8px;
-        background: #000;
-    }
-    #controls {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    button {
-        padding: 8px 12px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 1rem;
-        background: #2d2d2d;
-        color: white;
-        transition: background 0.3s;
-    }
-    button:hover {
-        background: #444;
-    }
-    #telemetry {
-        flex: 1;
-        background: #1e1e1e;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-    .telemetry-item {
-        margin: 10px 0;
-        font-size: 1.2rem;
-    }
-    .label {
-        color: #7ed6df;
-        font-weight: bold;
-    }
-</style>
+    <meta charset="UTF-8">
+    <title>AUV Control Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="{{ url_for('static', filename='config.js') }}"></script>
+    <style>
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #121212; color: #e0e0e0; display: flex; flex-direction: column; height: 100vh; }
+        header { padding: 12px; background: #1f1f1f; font-size: 1.5rem; text-align: center; border-bottom: 1px solid #333; }
+        main { display: flex; flex: 1; overflow: hidden; }
+        #video-section { flex: 3; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        #video-container { width: 100%; flex: 1; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+        #video-container img { max-width: 100%; max-height: 80vh; border-radius: 8px; background: #000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #controls { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; color: white; transition: background-color 0.3s, transform 0.1s; font-weight: 500; }
+        button:active { transform: scale(0.97); }
+        #armBtn.armed { background-color: #e74c3c; } /* Red for "Disarm" */
+        #armBtn.disarmed { background-color: #2ecc71; } /* Green for "Arm" */
+        #telemetry { flex: 1; background: #1e1e1e; padding: 25px; display: flex; flex-direction: column; justify-content: center; border-left: 1px solid #333; }
+        .telemetry-item { margin: 18px 0; font-size: 1.3rem; display: flex; justify-content: space-between; }
+        .label { color: #3498db; font-weight: bold; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
+        .modal-content { background-color: #2c3e50; padding: 30px; border-radius: 8px; width: 90%; max-width: 800px; position: relative; box-shadow: 0 5px 20px rgba(0,0,0,0.6); }
+        .close-btn { color: #bdc3c7; position: absolute; top: 15px; right: 25px; font-size: 30px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: #fff; }
+        #log-display { white-space: pre-wrap; word-wrap: break-word; max-height: 70vh; overflow-y: auto; background: #121212; padding: 15px; border-radius: 4px; font-family: 'SF Mono', 'Courier New', monospace; font-size: 0.9rem; }
+    </style>
 </head>
 <body>
-<header>AUV Live Video & Telemetry</header>
-<main>
-    <!-- Left Panel: Video + Controls -->
-    <div id="video-section">
-        <div id="video-container">
-            <img id="videoStream" src="" alt="Loading video...">
+    <header>AUV Control Dashboard</header>
+    <main>
+        <!-- Left Panel: Video Stream and Controls -->
+        <div id="video-section">
+            <div id="video-container">
+                <img id="videoStream" src="" alt="Loading video stream...">
+            </div>
+            <div id="controls">
+                <button id="armBtn" onclick="toggleArm()">Connect...</button>
+                <button style="background: #3498db;" onclick="refreshStream()">Refresh Stream</button>
+                <button style="background: #9b59b6;" onclick="takeSnapshot()">Capture Snapshot</button>
+                <button style="background: #f1c40f; color: #2c3e50;" onclick="viewLogs()">View System Logs</button>
+            </div>
         </div>
-        <div id="controls">
-            <button id="armBtn" onclick="toggleArm()">Arm</button>
-            <button onclick="refreshStream()">Refresh Stream</button>
-            <button onclick="takeSnapshot()">Capture Snapshot</button>
-            <button onclick="viewLogs()">Logs & Status</button>
+        <!-- Right Panel: Telemetry Data -->
+        <div id="telemetry">
+            <div class="telemetry-item"><span class="label">Depth:</span> <span id="depth">--</span> m</div>
+            <div class="telemetry-item"><span class="label">Velocity:</span> <span id="velocity">--</span> m/s</div>
+            <div class="telemetry-item"><span class="label">Heading:</span> <span id="heading">--</span> °</div>
+        </div>
+    </main>
+
+    <!-- Log Viewer Modal -->
+    <div id="logModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeLogModal()">&times;</span>
+            <h2>System Logs</h2>
+            <div id="log-display">Loading logs...</div>
         </div>
     </div>
 
-    <!-- Right Panel: Telemetry -->
-    <div id="telemetry">
-        <div class="telemetry-item">
-            <span class="label">Depth:</span> <span id="depth">--</span> m
-        </div>
-        <div class="telemetry-item">
-            <span class="label">Velocity:</span> <span id="velocity">--</span> m/s
-        </div>
-        <div class="telemetry-item">
-            <span class="label">Heading:</span> <span id="heading">--</span> °
-        </div>
-    </div>
-</main>
+    <script>
+        document.getElementById('videoStream').src = STREAM_URL;
+        let vehicleArmedState = false;
 
-<script>
-// Assign the stream from config.js
-document.getElementById('videoStream').src = STREAM_URL;
+        function toggleArm() {
+            const desiredState = !vehicleArmedState;
+            fetch('/api/arm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ state: desiredState })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Arm/Disarm command response:', data))
+            .catch(error => console.error('Error sending Arm/Disarm command:', error));
+        }
 
-let armed = false;
+        function refreshStream() {
+            document.getElementById("videoStream").src = `${STREAM_URL}&t=${new Date().getTime()}`;
+        }
 
-function toggleArm() {
-    armed = !armed;
-    document.getElementById("armBtn").innerText = armed ? "Disarm" : "Arm";
-    fetch(`/api/arm?state=${armed}`);
-}
+        function takeSnapshot() {
+            // Direct the browser to the API endpoint to trigger the download
+            window.location.href = '/api/snapshot';
+        }
 
-function refreshStream() {
-    // Cache-busting reload
-    document.getElementById("videoStream").src = STREAM_URL + "&t=" + new Date().getTime();
-}
+        function viewLogs() {
+            fetch('/api/logs').then(resp => resp.text()).then(data => {
+                const logDisplay = document.getElementById("log-display");
+                logDisplay.textContent = data;
+                document.getElementById("logModal").style.display = "flex";
+                logDisplay.scrollTop = logDisplay.scrollHeight; // Auto-scroll to the latest logs
+            });
+        }
 
-function takeSnapshot() {
-    fetch('/api/snapshot')
-    .then(resp => resp.blob())
-    .then(blob => {
-        let url = window.URL.createObjectURL(blob);
-        let a = document.createElement('a');
-        a.href = url;
-        a.download = `snapshot_${Date.now()}.jpg`;
-        a.click();
-    });
-}
+        function closeLogModal() {
+            document.getElementById("logModal").style.display = "none";
+        }
 
-function viewLogs() {
-    fetch('/api/logs')
-    .then(resp => resp.text())
-    .then(data => {
-        alert("Logs & Status:\n\n" + data);
-    });
-}
+        async function fetchTelemetry() {
+            try {
+                const response = await fetch('/telemetry');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
 
-async function fetchTelemetry() {
-    try {
-        const resp = await fetch('/telemetry'); // Flask API
-        const data = await resp.json();
-        document.getElementById('depth').textContent = parseFloat(data.depth).toFixed(2);
-        document.getElementById('velocity').textContent = parseFloat(data.velocity).toFixed(2);
-        document.getElementById('heading').textContent = parseFloat(data.heading).toFixed(0);
-    } catch (e) {
-        console.error('Telemetry fetch error', e);
-    }
-}
+                document.getElementById('depth').textContent = parseFloat(data.depth).toFixed(2);
+                document.getElementById('velocity').textContent = parseFloat(data.velocity).toFixed(2);
+                document.getElementById('heading').textContent = parseFloat(data.heading).toFixed(0);
 
-setInterval(fetchTelemetry, 1000); // Update every second
-window.onload = fetchTelemetry;
-</script>
+                vehicleArmedState = data.armed;
+                const armBtn = document.getElementById("armBtn");
+                armBtn.textContent = vehicleArmedState ? "Disarm" : "Arm";
+                armBtn.className = vehicleArmedState ? "armed" : "disarmed";
+
+            } catch (error) {
+                console.error('Telemetry fetch error:', error);
+                // Optionally, update the UI to show a disconnected state
+            }
+        }
+
+        // Start polling for telemetry data every second
+        setInterval(fetchTelemetry, 1000);
+        window.onload = fetchTelemetry; // Fetch immediately on load
+    </script>
 </body>
 </html>
